@@ -11,6 +11,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 from time import time
+from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
 
 print("Libraries have been imported")
 
@@ -39,6 +41,19 @@ titanic_training_data_drop = titanic_training_data[['Sex', 'Age', 'Survived', 'F
 print("Data before drop:", len(titanic_training_data['Age']))
 print("Data after drop:", len(titanic_training_data_drop['Age']))
 
+#%%
+#Make some plots to check for outliers
+a=titanic_training_data['Sex']
+b=titanic_training_data['Age']
+c=titanic_training_data['Fare']
+d=titanic_training_data['Survived']
+
+plt.scatter(a,d)
+plt.show()
+plt.scatter(b,d)
+plt.show()
+plt.scatter(c,d)
+plt.show()
 
 #%%
 #Setting labels and features (Subject to change)
@@ -57,9 +72,9 @@ x, y, test_size=0.2, random_state=42)
 print("Data has been split with a test size 0.2")
 
 #%%
-#First test a linear regression
+#First test a logistic regression
 #Making the classifier
-clf_logreg = LogisticRegression()
+clf_logreg = LogisticRegression(class_weight = 'balanced')
 
 #Fitting data and timing 
 t0=time()
@@ -77,4 +92,16 @@ print("Accuracy score:", metrics.accuracy_score(y_pred, y_true))
 print("Precision score:", metrics.precision_score(y_pred, y_true))
 print("Recall score:", metrics.recall_score(y_pred, y_true))
 print("f1 score:", metrics.f1_score(y_pred, y_true))
+
+#%% #Make a cross value logstic regression
+clf_logreg_fold= LogisticRegression(class_weight = 'balanced')
+
+#Predictions
+scores = cross_val_score(clf_logreg_fold, x, y, cv=8, scoring='f1_macro')
+#timing the SVM
+t0=time()
+print ("training time:", round(time()-t0, 3), "s")
+print("F1 score mean is:", scores.mean())
+
+#%%
 
