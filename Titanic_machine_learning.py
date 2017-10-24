@@ -35,7 +35,7 @@ print("Males are 0, Females are 1")
 
 #%%
 #Drop NaN values to make it workable for logarithm (subject to change according to features)
-titanic_training_data_drop = titanic_training_data[['Sex', 'Age', 'Survived']].dropna()
+titanic_training_data_drop = titanic_training_data[['Sex', 'Age', 'Survived', 'Fare']].dropna()
 print("Data before drop:", len(titanic_training_data['Age']))
 print("Data after drop:", len(titanic_training_data_drop['Age']))
 
@@ -45,7 +45,7 @@ print("Data after drop:", len(titanic_training_data_drop['Age']))
 
 labels = titanic_training_data_drop['Survived']
 
-features = titanic_training_data_drop[['Sex', 'Age']]
+features = titanic_training_data_drop[['Sex', 'Age', 'Fare']]
 x=features
 y=labels
 
