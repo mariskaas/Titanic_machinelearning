@@ -13,6 +13,8 @@ from sklearn import metrics
 from time import time
 from sklearn.model_selection import cross_val_score
 import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 print("Libraries have been imported")
 
@@ -36,24 +38,25 @@ print(titanic_training_data['Sex'])
 print("Males are 0, Females are 1")
 
 #%%
-#Drop NaN values to make it workable for logarithm (subject to change according to features)
-titanic_training_data_drop = titanic_training_data[['Sex', 'Age', 'Survived', 'Fare']].dropna()
-print("Data before drop:", len(titanic_training_data['Age']))
-print("Data after drop:", len(titanic_training_data_drop['Age']))
-
-#%%
 #Make some plots to check for outliers
 a=titanic_training_data['Sex']
 b=titanic_training_data['Age']
 c=titanic_training_data['Fare']
 d=titanic_training_data['Survived']
 
-plt.scatter(a,d)
+plt.scatter(b,c)
 plt.show()
-plt.scatter(b,d)
-plt.show()
-plt.scatter(c,d)
-plt.show()
+
+#%%
+#There are two datapoints with an exceptionally high fare, may be typo so remove
+titanic_training_data = titanic_training_data[titanic_training_data['Fare']<500]
+print("Outlier removed")
+#%%
+#Drop NaN values to make it workable for logarithm (subject to change according to features)
+titanic_training_data_drop = titanic_training_data[['Sex', 'Age', 'Survived', 'Fare']].dropna()
+print("Data before drop:", len(titanic_training_data['Age']))
+print("Data after drop:", len(titanic_training_data_drop['Age']))
+
 
 #%%
 #Setting labels and features (Subject to change)
@@ -88,20 +91,90 @@ print ("Predicting time:", round(time()-t0, 3), "s")
 
 y_pred = pred_logreg
 y_true = y_test
-print("Accuracy score:", metrics.accuracy_score(y_pred, y_true))
-print("Precision score:", metrics.precision_score(y_pred, y_true))
-print("Recall score:", metrics.recall_score(y_pred, y_true))
-print("f1 score:", metrics.f1_score(y_pred, y_true))
+print("Accuracy score logreg:", metrics.accuracy_score(y_pred, y_true))
+print("Precision score logreg:", metrics.precision_score(y_pred, y_true))
+print("Recall score logreg:", metrics.recall_score(y_pred, y_true))
+print("f1 score logreg:", metrics.f1_score(y_pred, y_true))
 
 #%% #Make a cross value logstic regression
 clf_logreg_fold= LogisticRegression(class_weight = 'balanced')
 
 #Predictions
-scores = cross_val_score(clf_logreg_fold, x, y, cv=8, scoring='f1_macro')
+scores_logreg = cross_val_score(clf_logreg_fold, x, y, cv=8, scoring='f1_macro')
 #timing the SVM
 t0=time()
 print ("training time:", round(time()-t0, 3), "s")
-print("F1 score mean is:", scores.mean())
+print("F1 score mean for logreg is:", scores_logreg.mean())
 
 #%%
+#Trying a decision tree classifier
+#making the classifier
+clf_tree = DecisionTreeClassifier(criterion='entropy', min_samples_split=3)
 
+#Fitting data and timing 
+t0=time()
+clf_tree.fit(x_train, y_train)
+print ("Training time:", round(time()-t0, 3), "s")
+
+#Predicing labels and timing
+t0=time()
+pred_tree = clf_tree.predict(x_test)
+print ("Predicting time:", round(time()-t0, 3), "s")
+
+y_pred = pred_tree
+y_true = y_test
+print("Accuracy score Tree:", metrics.accuracy_score(y_pred, y_true))
+print("Precision score tree:", metrics.precision_score(y_pred, y_true))
+print("Recall score Tree:", metrics.recall_score(y_pred, y_true))
+print("f1 score Tree:", metrics.f1_score(y_pred, y_true))
+
+#%%
+#Trying the tree including the fold
+clf_tree_fold = DecisionTreeClassifier(criterion = 'entropy', min_samples_split=7, random_state =42)
+
+#Predictions
+scores_tree = cross_val_score(clf_tree_fold, x, y, cv=8, scoring='f1_macro')
+
+#Timing and result
+t0=time()
+print ("training time:", round(time()-t0, 3), "s")
+print("F1 score mean for tree is:", scores_tree.mean())
+
+#%% #Trying Random forest Classifier
+#making the classififier
+clf_random_forest = RandomForestClassifier(class_weight = 'balanced')
+
+#Fitting data and timing 
+t0=time()
+clf_random_forest.fit(x_train, y_train)
+print ("Training time:", round(time()-t0, 3), "s")
+
+#Predicing labels and timing
+t0=time()
+pred_random_forest = clf_random_forest.predict(x_test)
+print ("Predicting time:", round(time()-t0, 3), "s")
+
+y_pred = pred_random_forest
+y_true = y_test
+print("Accuracy score forest:", metrics.accuracy_score(y_pred, y_true))
+print("Precision score forest:", metrics.precision_score(y_pred, y_true))
+print("Recall score forest:", metrics.recall_score(y_pred, y_true))
+print("f1 score forest:", metrics.f1_score(y_pred, y_true))
+
+#%%
+#Random forest including folding
+clf_random_forest_fold = RandomForestClassifier(n_estimators=20, min_samples_split=9)
+#Predictions f1 macro
+scores_random_forest_fold_f1 = cross_val_score(clf_random_forest_fold, x, y, cv=9, scoring='f1_macro')
+#Predictions accruacy
+scores_random_forest_fold_accuracy = cross_val_score(clf_random_forest_fold, x, y, cv=9, scoring='accuracy')
+
+#Timing and result f1
+t0=time()
+print ("training time:", round(time()-t0, 3), "s")
+print("F1 score mean for forest is:", scores_random_forest_fold_f1.mean())
+
+#Timing and result accuracy
+t0=time()
+print ("training time:", round(time()-t0, 3), "s")
+print("Accuracy score mean for forest is:", scores_random_forest_fold_accuracy.mean())
